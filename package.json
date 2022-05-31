@@ -1,0 +1,26 @@
+{
+  "name": "sicon",
+  "version": "0.0.1",
+  "description": "SICON`s API server",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "djjd2000",
+  "license": "ISC",
+  "dependencies": {
+    "@u4/opencv4nodejs": "^6.1.5",
+    "chokidar": "^3.5.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "fs-extra": "^10.1.0",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.4",
+    "nunjucks": "^3.2.3",
+    "path": "^0.12.7",
+    "python-shell": "^3.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  }
+}
