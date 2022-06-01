@@ -1,5 +1,4 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
 const fs = require('fs')
 const morgan = require('morgan')
@@ -9,10 +8,6 @@ const multer = require('multer')
 const nunjucks = require('nunjucks')
 const fsExtra = require('fs-extra')
 
-// const corsOpt = {
-//     origin: '',//opencv 사용 서버 주소
-//     optionsSuccessStatus: 200
-// }
 app.set('view engine', 'njk');
 nunjucks.configure('views', {
   express: app,
@@ -29,7 +24,7 @@ app.get('/', (req, res) => {
 
 app.post('/', async (req, res) => {
   console.log(req.body.values)
-  fsExtra.emptyDirSync('uploads/')
+  fsExtra.emptyDirSync('./uploads')
   res.send('ok')
 })
 

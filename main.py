@@ -6,7 +6,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import time
-import json
+import sys
 import requests
 import os
 def most_frequent(data):
@@ -47,53 +47,53 @@ knn.train(angle,cv2.ml.ROW_SAMPLE,label)
 
 pathdir = './uploads'
 filelist = os.listdir(pathdir)
-def sicon(filename):
-    startTime = time.time()
-    prev_index = 0
-    cap = cv2.VideoCapture(filename)
-    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    tmp_array = []
 
-    while length:
-        ret, img = cap.read()
-        if not ret:
-            break
-        imgRGB = cv2.cvtColor( img,cv2.COLOR_BGR2RGB)
-        result = hands.process(imgRGB)
+startTime = time.time()
+prev_index = 0
+cap = cv2.VideoCapture('./uploads/' + filelist[-1])
+length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+tmp_array = []
 
-        if result.multi_hand_landmarks is not None:
-            for res in result.multi_hand_landmarks:
-                joint = np.zeros((21,3))
-                for j, lm in enumerate(res.landmark):
-                    joint[j] = [lm.x, lm.y, lm.z]
+while length:
+    ret, img = cap.read()
+    if not ret:
+        break
+    imgRGB = cv2.cvtColor( img,cv2.COLOR_BGR2RGB)
+    result = hands.process(imgRGB)
 
-                v1 = joint[[0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0,17,18,19],:]
-                v2 = joint[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20],:]
+    if result.multi_hand_landmarks is not None:
+        for res in result.multi_hand_landmarks:
+            joint = np.zeros((21,3))
+            for j, lm in enumerate(res.landmark):
+                joint[j] = [lm.x, lm.y, lm.z]
 
-                v = v2 - v1
-                v = v/np.linalg.norm(v, axis=1)[:,np.newaxis]
-                comparev1 = v[[0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17],:]
-                comparev2 = v[[1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19],:]
-                angle = np.arccos(np.einsum('nt,nt->n', comparev1, comparev2))
+            v1 = joint[[0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0,17,18,19],:]
+            v2 = joint[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,17,18,19,20],:]
 
-                angle = np.degrees(angle)
+            v = v2 - v1
+            v = v/np.linalg.norm(v, axis=1)[:,np.newaxis]
+            comparev1 = v[[0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 17],:]
+            comparev2 = v[[1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19],:]
+            angle = np.arccos(np.einsum('nt,nt->n', comparev1, comparev2))
 
-                data = np.array([angle],dtype=np. float32)
-                ret, results, neighbours, dist = knn.findNearest(data,3)
-                index = int(results[0][0])
+            angle = np.degrees(angle)
 
-                if index in gesture.keys():
-                    if index != prev_index:
+            data = np.array([angle],dtype=np. float32)
+            ret, results, neighbours, dist = knn.findNearest(data,3)
+            index = int(results[0][0])
+
+            if index in gesture.keys():
+                if index != prev_index:
+                    startTime = time.time()
+                    prev_index = index
+                else:
+                    if(time.time() - startTime > 1):
+                        if (len(tmp_array) != 0):
+                            if (tmp_array[len(tmp_array)-1] != gesture[index]):
+                                tmp_array.append(gesture[index])
+                        else:
+                                tmp_array.append(gesture[index])
                         startTime = time.time()
-                        prev_index = index
-                    else:
-                        if(time.time() - startTime > 1):
-                            if (len(tmp_array) != 0):
-                                if (tmp_array[len(tmp_array)-1] != gesture[index]):
-                                    tmp_array.append(gesture[index])
-                            else:
-                                    tmp_array.append(gesture[index])
-                            startTime = time.time()
-    r = requests.post('http://116.126.198.83:3001/', json={ 'values': tmp_array })
-    print(r)
-sicon('./uploads/' + filelist[-1])
+r = requests.post('http://116.126.198.83:3001/', json={ 'values': tmp_array })
+print(r)
+sys.exit(0)
