@@ -52,10 +52,9 @@ startTime = time.time()
 prev_index = 0
 cap = cv2.VideoCapture('./uploads/' + filelist[-1])
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-tmp_array = ['왼쪽1', '왼쪽2', '오른쪽1', '왼쪽1', '오른쪽2', '여기']
+tmp_array = []
 
 while length:
-    break
     ret, img = cap.read()
     if not ret:
         break

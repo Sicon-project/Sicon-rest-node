@@ -36,41 +36,32 @@ app.get('/', (req, res) => {
   res.render('main')
 })
 
-app.post('/', async (req, res) => {
-  console.log(req.body.values)
-  fsExtra.emptyDirSync('./uploads')
-  res.send('ok')
-})
-
-app.post('/tmp', async(req, res, next) => {
-  try{
-    fs.readFile('result.json', 'utf8', (err, data) => {
-      if(err) throw err
-      const tmp = JSON.parse(data)
-      res.send(tmp)
-    })
-  } catch(err) {
-    console.log(err)
-    next(err)
-  }
-})
-
-app.post('/videoupload', upload.single('video'), async (req, res, next) => {
+app.post('/', upload.single('video'), async (req, res, next) => {
   try {
-    const { success, err = '', results } = await new Promise((resolve, reject) => {
-      PythonShell.run('main.py', null, (err, results) => {
+    const { success, err = '' } = await new Promise((resolve, reject) => {
+      PythonShell.run('main.py', null, (err) => {
             if(err) {
               reject({ success: false, err })
             }
-            console.log(`py results: ${results}`)
-            resolve({ success: true, results })
+            resolve({ success: true })
           })
     })
-    
+    if(success === true) {
+      fs.readFile('result.json', 'utf8', (err, data) => {
+        if(err) throw err
+        const tmp = JSON.parse(data)
+        res.send(tmp)
+      })
+    } else if(success === undefined) {
+      res.send('success is undefined')
+    } else {
+      res.send('un error occured')
+    }
   } catch (error) {
     console.error(error);
     next(error);
   }
+  fsExtra.emptyDirSync('./uploads')
 });
 
 app.listen('3001')
