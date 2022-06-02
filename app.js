@@ -15,25 +15,9 @@ nunjucks.configure('views', {
 });
 
 app.use(morgan('dev'))
+app.use(express.static('/result.json'));
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
-
-app.get('/', (req, res) => {
-  res.render('main')
-})
-
-app.post('/', async (req, res) => {
-  console.log(req.body.values)
-  fsExtra.emptyDirSync('./uploads')
-  res.send('ok')
-})
-
-try {
-  fs.readdirSync('uploads');
-} catch (err) {
-  console.error('uploads 폴더가 없어 uploads 폴더를 생성합니다.');
-  fs.mkdirSync('uploads');
-}
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -48,13 +32,41 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 * 1024 },
 });
 
+app.get('/', (req, res) => {
+  res.render('main')
+})
+
+app.post('/', async (req, res) => {
+  console.log(req.body.values)
+  fsExtra.emptyDirSync('./uploads')
+  res.send('ok')
+})
+
+app.post('/tmp', async(req, res, next) => {
+  try{
+    fs.readFile('result.json', 'utf8', (err, data) => {
+      if(err) throw err
+      const tmp = JSON.parse(data)
+      res.send(tmp)
+    })
+  } catch(err) {
+    console.log(err)
+    next(err)
+  }
+})
+
 app.post('/videoupload', upload.single('video'), async (req, res, next) => {
   try {
-    PythonShell.run('main.py', null, (err) => {
-      if(err) next(err)
-      console.log(err)
+    const { success, err = '', results } = await new Promise((resolve, reject) => {
+      PythonShell.run('main.py', null, (err, results) => {
+            if(err) {
+              reject({ success: false, err })
+            }
+            console.log(`py results: ${results}`)
+            resolve({ success: true, results })
+          })
     })
-    res.send('ok');
+    
   } catch (error) {
     console.error(error);
     next(error);

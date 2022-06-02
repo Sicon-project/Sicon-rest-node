@@ -7,7 +7,7 @@ import mediapipe as mp
 import numpy as np
 import time
 import sys
-import requests
+import json
 import os
 def most_frequent(data):
     return max(data, key=data.count)
@@ -52,9 +52,10 @@ startTime = time.time()
 prev_index = 0
 cap = cv2.VideoCapture('./uploads/' + filelist[-1])
 length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-tmp_array = []
+tmp_array = ['왼쪽1', '왼쪽2', '오른쪽1', '왼쪽1', '오른쪽2', '여기']
 
 while length:
+    break
     ret, img = cap.read()
     if not ret:
         break
@@ -94,6 +95,7 @@ while length:
                         else:
                                 tmp_array.append(gesture[index])
                         startTime = time.time()
-r = requests.post('http://116.126.198.83:3001/', json={ 'values': tmp_array })
-print(r)
+tmp_str = { 'values': tmp_array }
+with open('result.json','w', encoding='utf-8') as f:   
+    json.dump(tmp_str, f, indent=4, ensure_ascii=False)
 sys.exit(0)
